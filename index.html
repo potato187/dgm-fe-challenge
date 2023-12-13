@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Challenge DGM</title>
+
+		<style>
+			.container {
+				display: block;
+				width: 50vw;
+			}
+
+			.container img {
+				width: 100%;
+				height: 100%;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="container">
+			<img src="https://cmedia.dayta.asia/raw_xxx/20220501/td0040/td0040_20220501100534269_133159.jpg" alt="image" />
+		</div>
+
+		<script>
+			(() => {
+				const coordinates = [
+					[708, 23.000000000000004],
+					[708, 257],
+					[970, 257],
+					[970, 23.000000000000004],
+				];
+
+				const STROKE_LINE_CONFIG = {
+					color: '#56e330',
+					width: 4,
+				};
+
+				const calculatorCoordinates = (coordinates = [], scalingRatio = 1) => {
+					return [...coordinates].map((coordinate) => {
+						const [x, y] = coordinate;
+						return [parseFloat((x * scalingRatio).toFixed(2)), parseFloat((y * scalingRatio).toFixed(2))];
+					});
+				};
+
+				const createCanvasContext = (parentElement, initialWith = 0, initialHeight = 0) => {
+					if (!parentElement) return;
+
+					const canvas = document.createElement('canvas');
+					const canvasContext = canvas.getContext('2d');
+
+					parentElement.style.position = 'relative';
+
+					canvas.width = initialWith;
+					canvas.height = initialHeight;
+					canvas.style.position = 'absolute';
+					canvas.style.inset = '0 0';
+
+					parentElement.appendChild(canvas);
+					return [canvas, canvasContext];
+				};
+
+				const drawRectDetected = (canvasContext, coordinates = []) => {
+					if (!canvasContext || !coordinates.length) return;
+
+					canvasContext.beginPath();
+					const [startX, startY] = coordinates[0];
+
+					canvasContext.moveTo(startX, startY);
+
+					for (let index = 1, length = coordinates.length; index < length; index++) {
+						const [endX, endY] = coordinates[index];
+						canvasContext.lineTo(endX, endY);
+					}
+
+					canvasContext.closePath();
+
+					canvasContext.lineWidth = STROKE_LINE_CONFIG.width;
+					canvasContext.strokeStyle = STROKE_LINE_CONFIG.color;
+
+					canvasContext.stroke();
+				};
+
+				const clearCanvas = (canvas, ctx) => {
+					if (!ctx || !canvas) return;
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+				};
+
+				document.addEventListener('DOMContentLoaded', () => {
+					const container = document.querySelector('.container');
+					const imageSource = container.querySelector('* > img');
+					const [canvas, ctx] = createCanvasContext(container);
+
+					const drawLabelOnImage = () => {
+						const { offsetWidth, offsetHeight } = container;
+						const { naturalWidth } = imageSource;
+						const scalingRatio = parseFloat((offsetWidth / naturalWidth).toFixed(2));
+
+						canvas.width = offsetWidth;
+						canvas.height = offsetHeight;
+
+						const coords = calculatorCoordinates(coordinates, scalingRatio);
+						drawRectDetected(ctx, coords);
+					};
+
+					imageSource.addEventListener('load', () => {
+						drawLabelOnImage();
+					});
+
+					window.addEventListener('resize', () => {
+						clearCanvas(canvas, ctx);
+						drawLabelOnImage();
+					});
+
+					const resizeObserver = new ResizeObserver(() => {
+						clearCanvas(canvas, ctx);
+						drawLabelOnImage();
+					});
+
+					resizeObserver.observe(container);
+				});
+			})();
+		</script>
+	</body>
+</html>
